@@ -1,0 +1,48 @@
+FROM c.rzp.io/proxy_dockerhub/library/node:14
+
+ARG APP_NAME
+ARG STAGE
+ARG VERSION
+
+ENV APP_NAME=$APP_NAME
+ENV STAGE=$STAGE
+ENV VERSION=$VERSION
+
+RUN apt-get update && apt-get install -y ca-certificates
+
+EXPOSE 8888
+
+# Setup AWS CLI
+RUN apt-get update && apt-get install -y awscli
+
+# Create app directory
+RUN mkdir /$APP_NAME && chown -R node:node /$APP_NAME
+
+WORKDIR /$APP_NAME
+
+# Copy dependencies files so we can have better caching as these don't change often
+COPY --chown=node:node .npmrc package.json yarn.lock ./
+
+# Install strictly from lockfile don't generate new lockfile
+RUN --mount=type=secret,id=GITHUB_ACCESS_TOKEN \
+    GITHUB_ACCESS_TOKEN=$(cat /run/secrets/GITHUB_ACCESS_TOKEN) && \
+    export GITHUB_ACCESS_TOKEN && \
+    yarn install --frozen-lockfile
+
+# Copy app source
+COPY --chown=node:node . ./
+
+# Yolo the npmrc out now because it will try to replace git token (for each npm command) which won't be present in env anymore
+RUN rm -f .npmrc
+
+# Build the app source. This command will run during docker build
+RUN --mount=type=secret,id=GITHUB_ACCESS_TOKEN \
+    --mount=type=secret,id=SENTRY_AUTH_TOKEN \
+    GITHUB_ACCESS_TOKEN=$(cat /run/secrets/GITHUB_ACCESS_TOKEN) && \
+    SENTRY_AUTH_TOKEN=$(cat /run/secrets/SENTRY_AUTH_TOKEN) && \
+    export GITHUB_ACCESS_TOKEN && \
+    export SENTRY_AUTH_TOKEN && \
+    yarn $STAGE:build
+
+# Serve the app. This command will run during docker run
+CMD yarn $STAGE:serve

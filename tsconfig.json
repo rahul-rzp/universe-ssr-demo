@@ -1,0 +1,4 @@
+{
+  "extends": "@razorpay/universe-cli/tsconfig.json",
+  "include": ["src"]
+}

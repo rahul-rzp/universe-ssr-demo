@@ -1,0 +1,61 @@
+name: Version
+on:
+  push:
+    branches:
+      - master
+env:
+  GITHUB_ACCESS_TOKEN: ${{ secrets.CI_BOT_TOKEN }}
+  HOME: /actions-runner/_work
+jobs:
+  version:
+    name: Version Update
+    runs-on: self-hosted
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.CI_BOT_TOKEN }}
+      - name: Setup Node v14.19
+        uses: actions/setup-node@v2
+        with:
+          node-version: "14.19"
+      - name: Install Yarn
+        run: npm install -g yarn
+      - name: Setup Cache & Install Dependencies
+        uses: bahmutov/npm-install@v1.8.15
+        with:
+          install-command: yarn --frozen-lockfile
+      - name: Create Version Update Pull Request
+        id: changesets
+        uses: changesets/action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.CI_BOT_TOKEN }}
+        with:
+          version: yarn version-update
+          commit: "build: update version"
+          title: "build: update version"
+  create-release:
+    name: Create Release
+    runs-on: self-hosted
+    timeout-minutes: 10
+    if: "contains(github.event.head_commit.message, 'build: update version') && github.event.head_commit.author.name == 'rzpcibot'"
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.CI_BOT_TOKEN }}
+      - name: Setup Node v14.19
+        uses: actions/setup-node@v2
+        with:
+          node-version: "14.19"
+      - name: Install Yarn
+        run: npm install -g yarn
+      - name: Setup Cache & Install Dependencies
+        uses: bahmutov/npm-install@v1.8.15
+        with:
+          install-command: yarn --frozen-lockfile
+      - name: Run release script
+        run: yarn universe release
+        env:
+          GITHUB_TOKEN: ${{ secrets.CI_BOT_TOKEN }}

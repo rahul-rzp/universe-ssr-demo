@@ -1,0 +1,41 @@
+name: Post Deployment - new-universe-demo
+on:
+  - deployment
+env:
+  APP_NAME: new-universe-demo
+  HOME: /actions-runner/_work
+  GITHUB_ACCESS_TOKEN: ${{ secrets.CI_BOT_TOKEN }}
+jobs:
+  mark-github-release:
+    runs-on: self-hosted
+    timeout-minutes: 10
+    steps:
+      - name: Mark Release Success on GitHub
+        if: ${{ success() }}
+        run: |
+          curl --location --request POST "https://api.github.com/repos/razorpay/new-universe-demo/deployments/${{ github.event.deployment.id }}/statuses" \
+          --header "Authorization: token ${{ github.token }}" \
+          --header "Accept: application/vnd.github.everest-preview+json" \
+          --header "Content-Type: application/json" \
+          --data-raw '{"environment": "${{ github.event.deployment.environment }}","state": "success"}'
+  log-deployment:
+    name: Send Deployment Log
+    runs-on: self-hosted
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.CI_BOT_TOKEN }}
+      - name: Setup Node v14.19
+        uses: actions/setup-node@v2
+        with:
+          node-version: "14.19"
+      - name: Install Yarn
+        run: npm install -g yarn
+      - name: Setup Cache & Install Dependencies
+        uses: bahmutov/npm-install@v1.8.15
+        with:
+          install-command: yarn --frozen-lockfile
+      - name: Run Universe Log Spinnaker Deployment Script
+        run: yarn universe log-spinnaker-deployment

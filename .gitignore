@@ -1,0 +1,20 @@
+# editor configs
+.idea
+.vscode
+.gradle
+.DS_Store
+
+build
+
+# logs
+*-debug.log
+*-error.log
+
+node_modules
+/package-lock.json
+
+# local environment secrets files
+.env.*.secrets
+
+lighthouse-reports
+coverage
