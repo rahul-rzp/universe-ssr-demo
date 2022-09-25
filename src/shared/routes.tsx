@@ -1,7 +1,7 @@
 import React from 'react';
 import loadable, { LoadableComponent } from '@loadable/component';
 import { QueryClient } from '@tanstack/react-query';
-import { fetchUser, fetchUsers } from './api';
+import { fetchSlowApi, fetchUsers } from './api';
 
 // These will create separate JS bundles
 const Home = loadable(() => import('../home/Home'));
@@ -32,7 +32,7 @@ export const routes: Routes = [
     element: <Home />,
     loadableChunk: Home,
     cacheExpirySeconds: 1 * HOUR,
-    isABEnabled: true,
+    // isABEnabled: true,
     fetchApi: (queryClient: QueryClient) => queryClient.prefetchQuery(['users'], fetchUsers),
   },
   {
@@ -40,6 +40,6 @@ export const routes: Routes = [
     element: <About />,
     loadableChunk: About,
     cacheExpirySeconds: 24 * HOUR,
-    fetchApi: (queryClient: QueryClient) => queryClient.prefetchQuery(['user'], fetchUser),
+    fetchApi: (queryClient: QueryClient) => queryClient.prefetchQuery(['age'], fetchSlowApi),
   },
 ];

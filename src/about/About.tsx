@@ -2,10 +2,10 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 import Head from '../shared/components/Head';
-import { fetchUser } from '../shared/api';
+import { fetchSlowApi } from '../shared/api';
 
 const About = (): JSX.Element => {
-  const { data, error, isLoading } = useQuery(['user'], fetchUser, {
+  const { data, error, isLoading } = useQuery(['age'], fetchSlowApi, {
     staleTime: 5000,
   });
   return (
