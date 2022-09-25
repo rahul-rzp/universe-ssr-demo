@@ -1,7 +1,7 @@
 {
-  "name": "new-universe-demo",
+  "name": "universe-ssr-demo",
   "description": "test",
-  "repository": "https://github.com/razorpay/new-universe-demo",
+  "repository": "https://github.com/razorpay/universe-ssr-demo",
   "version": "1.0.0",
   "author": "me",
   "license": "UNLICENSED",
