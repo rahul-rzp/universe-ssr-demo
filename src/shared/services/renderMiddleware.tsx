@@ -7,6 +7,7 @@ import { renderToStaticMarkup, renderToString } from 'react-dom/server';
 import { ChunkExtractor } from '@loadable/server';
 import { StaticRouter } from 'react-router-dom/server';
 import { HelmetProvider, HelmetContext } from 'react-helmet-async';
+import { ServerStyleSheet } from 'styled-components';
 import isEmpty from '@razorpay/universe-cli/isEmpty';
 
 import HTML from '../components/HTML';
@@ -22,6 +23,8 @@ const generatePage = (requestURL: string): string => {
   });
 
   const helmetContext: HelmetContext = {};
+  const sheet = new ServerStyleSheet();
+
   const app = extractor.collectChunks(
     <ErrorBoundary>
       <HelmetProvider context={helmetContext}>
@@ -31,12 +34,14 @@ const generatePage = (requestURL: string): string => {
       </HelmetProvider>
     </ErrorBoundary>,
   );
+
   const scriptTags = extractor.getScriptElements();
   const linkTags = extractor.getLinkElements();
-  const styleTags = extractor.getStyleElements();
 
   // serializing the app populates helmetContext with all head meta information
-  const serializedApp = renderToString(app);
+  const serializedApp = renderToString(sheet.collectStyles(app));
+
+  const styleTags = sheet.getStyleElement();
 
   return `<!doctype html>
   ${renderToStaticMarkup(
@@ -58,7 +63,10 @@ const renderMiddleware: ExpressMiddleware =
   () =>
   async (req, res): Promise<void> => {
     let serverResponse: string | null;
-    if (await redisService.isPageCached(req.path)) {
+    // TODO: disable redis cache during development
+    // eslint-disable-next-line no-constant-condition
+    if ((await redisService.isPageCached(req.path)) && false) {
+      console.log('cache hit');
       // Cache Hit
       serverResponse = await redisService.getPageFromCache(req.path);
       if (isEmpty(serverResponse)) {
@@ -67,6 +75,7 @@ const renderMiddleware: ExpressMiddleware =
       }
     } else {
       // Server Hit
+      console.log('server hit');
       serverResponse = generatePage(req.path);
       redisService.storePageInCache(req.path, serverResponse);
     }

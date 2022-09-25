@@ -1,7 +1,7 @@
 import React, { type Dispatch } from 'react';
 
 const BladeThemeTokensContext = React.createContext({
-  theme: '',
+  theme: 'payment',
   setTheme: (() => null) as Dispatch<string>,
 });
 
