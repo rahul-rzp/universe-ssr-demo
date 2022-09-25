@@ -4,10 +4,12 @@ import loadable from '@loadable/component';
 import { Button, Heading, Link, Title, Theme } from '@razorpay/blade/components';
 import errorService from '@razorpay/universe-cli/errorService';
 import styled from 'styled-components';
+import { useQuery } from '@tanstack/react-query';
 import LogoLight from '../../static/razorpay-logo-light.svg';
 import LogoDark from '../../static/razorpay-logo-dark.svg';
 import GlobalStyle from '../shared/components/GlobalStyles';
 import BladeThemeTokensContext from '../shared/BladeThemeTokensContext';
+import { fetchUsers } from '../shared/api';
 
 // This will create a separate JS bundle
 const SampleComponent = loadable(() => import('./SampleComponent'));
@@ -84,7 +86,9 @@ const Home = (): JSX.Element => {
     text: 'Crash the UI',
   });
   const { setTheme, theme } = useContext(BladeThemeTokensContext);
-
+  const { data, error, isLoading } = useQuery(['users'], fetchUsers, {
+    staleTime: 5000,
+  });
   return (
     <div>
       <GlobalStyle />
@@ -163,6 +167,13 @@ const Home = (): JSX.Element => {
           {`Switch to ${theme === 'payment' ? 'banking' : 'payment'} theme`}
         </Button>
         <SampleComponent />
+        {isLoading ? (
+          <div>Loading...</div>
+        ) : error ? (
+          <div>Error occured: {JSON.stringify(error)}</div>
+        ) : (
+          <pre>{JSON.stringify(data, null, 4)}</pre>
+        )}
       </MainContainer>
       <Footer>
         <Link href="https://razorpay.com"> Powered by </Link>
