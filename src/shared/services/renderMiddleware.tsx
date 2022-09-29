@@ -101,12 +101,13 @@ const renderMiddleware: ExpressMiddleware =
     let serverResponse: string | null;
     // TODO: disable redis cache during development
     // eslint-disable-next-line no-constant-condition
-    if ((await redisService.isPageCached(req.path)) && false) {
+    if ((await redisService.isPageCached(req.path)) && true) {
       console.log('cache hit');
       // Cache Hit
       serverResponse = await redisService.getPageFromCache(req.path);
       if (isEmpty(serverResponse)) {
         // if error, return page from server
+        console.log('empty response');
         serverResponse = await generatePage(req.path);
       }
     } else {

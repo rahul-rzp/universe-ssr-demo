@@ -2,6 +2,17 @@ import Redis from 'ioredis';
 import packageJSON from '../../../package.json';
 import { routes } from '../routes';
 import env from '../../env';
+// import { matchPath } from 'react-router-dom';
+
+const transformRoute = (route: string): string => {
+  if (route.length > 1) {
+    const lastChar = route[route.length - 1];
+    if (lastChar === '/') {
+      return route.substring(0, route.length - 1);
+    }
+  }
+  return route;
+};
 
 const isDevEnvironment = __STAGE__ === 'development';
 
@@ -44,20 +55,22 @@ const storePageInCache = async (
   route: string,
   value: Redis.ValueType,
 ): Promise<REDIS_STATUS_OK | null> => {
-  const routeLevelExpiry = routes.find(
-    (definedRoute) =>
+  const routeLevelExpiry = routes.find((definedRoute) => {
+    route = transformRoute(route);
+    return (
       createCachePageKey({
         route: definedRoute.path,
       }) ===
       createCachePageKey({
         route,
-      }),
-  );
+      })
+    );
+  });
   // Priority order:
   // route level expiry defined in routes.ts > default expiry time
   const pageExpiryTimeSeconds: number =
     routeLevelExpiry?.cacheExpirySeconds ?? DEFAULT_CACHE_EXPIRY_TIME_SECONDS;
-
+  console.log(pageExpiryTimeSeconds, 'expiry');
   try {
     return await redis.set(
       createCachePageKey({
@@ -76,6 +89,7 @@ const storePageInCache = async (
 };
 
 const isPageCached = async (route: string): Promise<boolean> => {
+  route = transformRoute(route);
   // If redis is not connected, we return false.
   // This helps us avoid the delay of failure on 'redis.exists()' function.
   if (redis.status !== 'ready') {
@@ -101,6 +115,7 @@ const isPageCached = async (route: string): Promise<boolean> => {
 };
 
 const getPageFromCache = async (route: string): Promise<string | null> => {
+  route = transformRoute(route);
   try {
     return await redis.get(
       createCachePageKey({

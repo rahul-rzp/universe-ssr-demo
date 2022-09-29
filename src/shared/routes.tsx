@@ -31,7 +31,7 @@ export const routes: Routes = [
     path: paths.HOME,
     element: <Home />,
     loadableChunk: Home,
-    cacheExpirySeconds: 1 * HOUR,
+    cacheExpirySeconds: 20,
     // isABEnabled: true,
     fetchApi: (queryClient: QueryClient) => queryClient.prefetchQuery(['users'], fetchUsers),
   },
@@ -39,7 +39,7 @@ export const routes: Routes = [
     path: paths.ABOUT,
     element: <About />,
     loadableChunk: About,
-    cacheExpirySeconds: 24 * HOUR,
+    cacheExpirySeconds: 10,
     fetchApi: (queryClient: QueryClient) => queryClient.prefetchQuery(['age'], fetchSlowApi),
   },
 ];
